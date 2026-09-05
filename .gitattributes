@@ -1,0 +1,26 @@
+# 【行业标准】行尾规范化：用配置锁死行尾，避免编辑器静默改写整份文件
+#
+# 背景：一次端口调整时，编辑器把壳的三个源码文件从 LF 整体改写为 CRLF，
+# 产生 3000+ 行"全文变更"。壳源码须与上游 aw-tauri 保持逐字节可比，
+# 否则同步上游时这三个文件必然全文冲突，真正的逻辑改动会被噪音淹没。
+# 上游 aw-tauri 全仓库为 LF，故壳侧一律锁定 LF。
+#
+# 范围说明：只约束壳目录。webui/、docs/、scripts/ 为本项目独占、
+# 不与上游共享，其现有行尾保持不变，避免产生无意义的全量改写。
+
+# 壳源码与壳配置：必须与上游一致
+src-tauri/**/*.rs text eol=lf
+src-tauri/**/*.toml text eol=lf
+src-tauri/**/*.json text eol=lf
+
+# Windows 脚本：保持 CRLF（PowerShell 5.1 对纯 LF 脚本解析不稳）
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制资源：不做任何行尾转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.icns binary
