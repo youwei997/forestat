@@ -14,10 +14,10 @@ updates:
     schedule:
       interval: "weekly"
     groups:
-      # Both crates come from the same aw-server-rust Git revision. Updating
+      # Both crates come from the same forestat-server-deps Git revision. Updating
       # them separately creates duplicate Cargo.lock PRs and can leave the
       # update stream blocked behind one stale PR.
-      aw-server-rust:
+      forestat-server-deps:
         patterns:
           - "aw-server"
           - "aw-datastore"

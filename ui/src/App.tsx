@@ -122,7 +122,7 @@ function App() {
           <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <input type="checkbox" checked={cfg.background_mode} onChange={toggleBackground} />
             <span>
-              后台轻量模式(开机自启、静默运行、无界面无托盘;任务管理器中可见 aw-next.exe)
+              后台轻量模式(开机自启、静默运行、无界面无托盘;任务管理器中可见 forestat.exe)
             </span>
           </label>
 

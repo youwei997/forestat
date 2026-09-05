@@ -112,7 +112,7 @@ jobs:
         if: startsWith(matrix.platform, 'ubuntu')
         uses: actions/upload-artifact@v7
         with:
-          name: aw-tauri-linux-${{ matrix.platform }}-appimage
+          name: forestat-linux-${{ matrix.platform }}-appimage
           path: src-tauri/target/release/bundle/appimage/*.AppImage
           if-no-files-found: warn
           retention-days: 14
@@ -121,7 +121,7 @@ jobs:
         if: startsWith(matrix.platform, 'ubuntu')
         uses: actions/upload-artifact@v7
         with:
-          name: aw-tauri-linux-${{ matrix.platform }}-deb
+          name: forestat-linux-${{ matrix.platform }}-deb
           path: src-tauri/target/release/bundle/deb/*.deb
           if-no-files-found: warn
           retention-days: 14
@@ -130,7 +130,7 @@ jobs:
         if: matrix.platform == 'macos-latest'
         uses: actions/upload-artifact@v7
         with:
-          name: aw-tauri-macos
+          name: forestat-macos
           path: src-tauri/target/release/bundle/dmg/*.dmg
           if-no-files-found: warn
           retention-days: 14
@@ -139,7 +139,7 @@ jobs:
         if: matrix.platform == 'windows-latest'
         uses: actions/upload-artifact@v7
         with:
-          name: aw-tauri-windows-${{ matrix.platform }}
+          name: forestat-windows-${{ matrix.platform }}
           path: |
             src-tauri/target/release/bundle/msi/*.msi
             src-tauri/target/release/bundle/nsis/*.exe
@@ -150,7 +150,7 @@ jobs:
         if: matrix.platform == 'windows-11-arm'
         uses: actions/upload-artifact@v7
         with:
-          name: aw-tauri-windows-${{ matrix.platform }}
+          name: forestat-windows-${{ matrix.platform }}
           path: src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi
           if-no-files-found: warn
           retention-days: 14
