@@ -12,74 +12,117 @@ html, body, #root {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  transition: background 0.2s, color 0.2s;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
 }
 
 :root {
-  --bg-primary: #f5f5f7;
-  --bg-secondary: #e8e8ed;
-  --bg-card: #ffffff;
-  --text-primary: #1d1d1f;
-  --text-secondary: #86868b;
-  --accent: #0071e3;
-  --accent-light: rgba(0, 113, 227, 0.1);
-  --border: #d2d2d7;
-  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-hover: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
-  --radius: 12px;
-  --chart-1: #0071e3;
-  --chart-2: #5856d6;
-  --chart-3: #af52de;
-  --chart-4: #ff2d55;
-  --chart-5: #34c759;
-  --chart-6: #8e8e93;
+  --bg: #ffffff;
+  --bg-alt: #f6f6f7;
+  --border: #e5e5e7;
+  --text: #1a1a1a;
+  --text-muted: #6e6e73;
+  --accent: #2563eb;
+  --accent-light: rgba(37, 99, 235, 0.08);
+  --danger: #dc2626;
+  --chart-1: #2563eb;
+  --chart-2: #6366f1;
+  --chart-3: #a855f7;
+  --chart-4: #ec4899;
+  --chart-5: #10b981;
+  --chart-6: #6b7280;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-primary: #1c1c1e;
-    --bg-secondary: #2c2c2e;
-    --bg-card: #2c2c2e;
-    --text-primary: #f5f5f7;
-    --text-secondary: #98989d;
-    --accent: #0a84ff;
-    --accent-light: rgba(10, 132, 255, 0.15);
-    --border: #3a3a3c;
-    --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
-    --shadow-hover: 0 4px 12px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.2);
-    --chart-1: #0a84ff;
-    --chart-2: #5e5ce6;
-    --chart-3: #bf5af2;
-    --chart-4: #ff375f;
-    --chart-5: #30d158;
-    --chart-6: #636366;
+    --bg: #1a1a1a;
+    --bg-alt: #232325;
+    --border: #2e2e30;
+    --text: #f5f5f7;
+    --text-muted: #98989d;
+    --accent: #3b82f6;
+    --accent-light: rgba(59, 130, 246, 0.14);
+    --danger: #ef4444;
+    --chart-1: #3b82f6;
+    --chart-2: #818cf8;
+    --chart-3: #c084fc;
+    --chart-4: #f472b6;
+    --chart-5: #34d399;
+    --chart-6: #9ca3af;
   }
 }
 
 button {
   font-family: inherit;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+button:hover:not(:disabled) {
+  background: var(--bg-alt);
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+button.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+button.primary:hover:not(:disabled) {
+  filter: brightness(0.92);
+  background: var(--accent);
+}
+button.danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+button.danger:hover:not(:disabled) {
+  background: var(--danger);
+  color: #fff;
 }
 
-.stats-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(4, 1fr);
+input[type="text"] {
+  font-family: inherit;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.1s;
+}
+input[type="text"]:focus {
+  border-color: var(--accent);
+}
+input[type="checkbox"] {
+  accent-color: var(--accent);
+  cursor: pointer;
 }
 
-.charts-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: 1fr 1fr;
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
 }
 
-@media (max-width: 1023px) {
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .charts-grid { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 767px) {
-  .stats-grid { grid-template-columns: 1fr 1fr; }
+.live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--chart-5);
+  margin-right: 5px;
+  vertical-align: middle;
+  animation: pulse-dot 1.6s ease-in-out infinite;
 }

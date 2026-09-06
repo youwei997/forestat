@@ -22,10 +22,32 @@ const COLUMNS: { key: SortKey; label: string }[] = [
   { key: "total_secs", label: "总计" },
 ];
 
+const MONOGRAM_COLORS = [
+  "var(--chart-1)", "var(--chart-2)", "var(--chart-3)",
+  "var(--chart-4)", "var(--chart-5)",
+];
+
+/** 用名字做稳定 hash 选一个颜色 */
+function colorFor(name: string): string {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
+  return MONOGRAM_COLORS[Math.abs(h) % MONOGRAM_COLORS.length];
+}
+
+function monogram(name: string): string {
+  const s = name.trim();
+  if (!s) return "?";
+  // 去掉常见前缀
+  const stripped = s.replace(/^(microsoft|ms)\s*/i, "");
+  if (stripped !== s) return stripped[0].toUpperCase();
+  return s[0].toUpperCase();
+}
+
 export function AppTable({ rows }: AppTableProps) {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("total_secs");
   const [sortAsc, setSortAsc] = useState(false);
+  const [hovered, setHovered] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     let result = rows;
@@ -51,42 +73,40 @@ export function AppTable({ rows }: AppTableProps) {
 
   return (
     <div style={{
-      background: "var(--bg-card)",
-      borderRadius: "var(--radius)",
-      boxShadow: "var(--shadow)",
+      border: "1px solid var(--border)",
+      borderRadius: 4,
       overflow: "hidden",
       display: "flex",
       flexDirection: "column",
       height: "100%",
     }}>
-      {/* 搜索栏 */}
-      <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+      <div style={{
+        padding: "6px 8px",
+        borderBottom: "1px solid var(--border)",
+        flexShrink: 0,
+      }}>
         <input
           type="text"
-          placeholder="搜索应用..."
+          placeholder="搜索应用…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "8px 12px",
-            border: "1px solid var(--border)",
-            borderRadius: 8,
-            background: "var(--bg-primary)",
-            color: "var(--text-primary)",
-            fontSize: "0.85rem",
-            outline: "none",
-          }}
+          style={{ width: "100%" }}
         />
       </div>
-      {/* 表格 */}
       <div style={{ overflow: "auto", flex: 1 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <thead>
-            <tr style={{ background: "var(--bg-secondary)" }}>
+            <tr style={{ background: "var(--bg-alt)" }}>
               <th style={{
-                padding: "10px 16px", textAlign: "left", fontWeight: 600,
-                color: "var(--text-secondary)", fontSize: "0.75rem",
-                position: "sticky", top: 0, background: "var(--bg-secondary)",
+                padding: "6px 10px",
+                textAlign: "left",
+                fontWeight: 600,
+                color: "var(--text-muted)",
+                fontSize: 11,
+                position: "sticky",
+                top: 0,
+                background: "var(--bg-alt)",
+                width: "40%",
               }}>
                 应用
               </th>
@@ -95,10 +115,17 @@ export function AppTable({ rows }: AppTableProps) {
                   key={col.key}
                   onClick={() => handleSort(col.key)}
                   style={{
-                    padding: "10px 16px", textAlign: "right", fontWeight: 600,
-                    color: "var(--text-secondary)", fontSize: "0.75rem",
-                    cursor: "pointer", userSelect: "none", whiteSpace: "nowrap",
-                    position: "sticky", top: 0, background: "var(--bg-secondary)",
+                    padding: "6px 10px",
+                    textAlign: "right",
+                    fontWeight: 600,
+                    color: col.key === "today_secs" ? "var(--accent)" : "var(--text-muted)",
+                    fontSize: 11,
+                    cursor: "pointer",
+                    userSelect: "none",
+                    whiteSpace: "nowrap",
+                    position: "sticky",
+                    top: 0,
+                    background: col.key === "today_secs" ? "var(--accent-light)" : "var(--bg-alt)",
                   }}
                 >
                   {col.label}{sortKey === col.key ? (sortAsc ? " ↑" : " ↓") : ""}
@@ -109,20 +136,82 @@ export function AppTable({ rows }: AppTableProps) {
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={5} style={{ padding: 24, textAlign: "center", color: "var(--text-secondary)" }}>
+                <td colSpan={5} style={{
+                  padding: 16,
+                  textAlign: "center",
+                  color: "var(--text-muted)",
+                  fontSize: 11,
+                }}>
                   暂无数据
                 </td>
               </tr>
             )}
-            {filtered.map((r) => (
-              <tr key={r.app} style={{ borderBottom: "1px solid var(--border)" }}>
-                <td style={{ padding: "10px 16px", fontWeight: 600 }}>{r.app}</td>
-                <td style={{ padding: "10px 16px", textAlign: "right", color: "var(--text-secondary)" }}>{fmtHours(r.today_secs)}</td>
-                <td style={{ padding: "10px 16px", textAlign: "right", color: "var(--text-secondary)" }}>{fmtHours(r.week_secs)}</td>
-                <td style={{ padding: "10px 16px", textAlign: "right", color: "var(--text-secondary)" }}>{fmtHours(r.month_secs)}</td>
-                <td style={{ padding: "10px 16px", textAlign: "right", fontWeight: 600 }}>{fmtHours(r.total_secs)}</td>
-              </tr>
-            ))}
+            {filtered.map((r) => {
+              const isHover = hovered === r.app;
+              return (
+                <tr
+                  key={r.app}
+                  onMouseEnter={() => setHovered(r.app)}
+                  onMouseLeave={() => setHovered(null)}
+                  style={{
+                    borderBottom: "1px solid var(--border)",
+                    background: isHover ? "var(--bg-alt)" : "transparent",
+                    transition: "background 0.08s",
+                  }}
+                >
+                  <td style={{ padding: "5px 10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                      <span style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: 5,
+                        background: colorFor(r.app),
+                        color: "#fff",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        lineHeight: 1,
+                      }}>{monogram(r.app)}</span>
+                      <span style={{
+                        fontWeight: 500,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}>{r.app}</span>
+                    </div>
+                  </td>
+                  <td style={{
+                    padding: "5px 10px",
+                    textAlign: "right",
+                    color: "var(--text)",
+                    fontWeight: 600,
+                    fontVariantNumeric: "tabular-nums",
+                    background: "var(--accent-light)",
+                  }}>{fmtHours(r.today_secs)}</td>
+                  <td style={{
+                    padding: "5px 10px",
+                    textAlign: "right",
+                    color: "var(--text-muted)",
+                    fontVariantNumeric: "tabular-nums",
+                  }}>{fmtHours(r.week_secs)}</td>
+                  <td style={{
+                    padding: "5px 10px",
+                    textAlign: "right",
+                    color: "var(--text-muted)",
+                    fontVariantNumeric: "tabular-nums",
+                  }}>{fmtHours(r.month_secs)}</td>
+                  <td style={{
+                    padding: "5px 10px",
+                    textAlign: "right",
+                    fontWeight: 600,
+                    fontVariantNumeric: "tabular-nums",
+                  }}>{fmtHours(r.total_secs)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

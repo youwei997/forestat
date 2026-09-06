@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
-import { StatsCard } from "./components/StatsCard";
 import { AppUsagePie } from "./components/AppUsagePie";
 import { WeeklyBar } from "./components/WeeklyBar";
 import { AppTable } from "./components/AppTable";
@@ -26,7 +25,7 @@ interface AppConfig {
 function App() {
   const [rows, setRows] = useState<StatRow[]>([]);
   const [cfg, setCfg] = useState<AppConfig | null>(null);
-  const [tab, setTab] = useState<"stats" | "settings">("stats");
+  const [showSettings, setShowSettings] = useState(false);
   const [msg, setMsg] = useState("");
 
   const refresh = useCallback(async () => {
@@ -94,81 +93,106 @@ function App() {
       height: "100dvh",
       display: "flex",
       flexDirection: "column",
-      padding: 20,
-      gap: 16,
+      padding: 10,
+      gap: 8,
       overflow: "hidden",
-      maxWidth: 960,
+      maxWidth: 1200,
       margin: "0 auto",
       width: "100%",
     }}>
-      {/* 顶部导航 */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-        <button onClick={() => setTab("stats")} disabled={tab === "stats"} style={tabBtn(tab === "stats")}>统计</button>
-        <button onClick={() => setTab("settings")} disabled={tab === "settings"} style={tabBtn(tab === "settings")}>设置</button>
-        <span style={{ marginLeft: "auto", color: "var(--text-secondary)", fontSize: 13 }}>{msg}</span>
-      </div>
-
-      {tab === "stats" && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, overflow: "hidden", minHeight: 0 }}>
-          {/* 统计卡片 */}
-          <div className="stats-grid" style={{ flexShrink: 0 }}>
-            <StatsCard title="今日使用" value={fmtHours(totalToday)} icon="⏱" />
-            <StatsCard title="本周使用" value={fmtHours(totalWeek)} icon="📅" />
-            <StatsCard title="本月使用" value={fmtHours(totalMonth)} icon="📊" />
-            <StatsCard title="应用数量" value={`${appCount}`} icon="💻" />
-          </div>
-          {/* 图表区 */}
-          <div className="charts-grid" style={{ flex: "1 1 0", minHeight: 0 }}>
-            <AppUsagePie rows={rows} />
-            <WeeklyBar rows={rows} />
-          </div>
-          {/* 表格区 */}
-          <div style={{ flex: "1 1 0", minHeight: 0, overflow: "hidden" }}>
-            <AppTable rows={rows} />
-          </div>
+      {/* 单行 header：logo + 内联统计 + 设置按钮 */}
+      <header style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+        paddingBottom: 8,
+        borderBottom: "1px solid var(--border)",
+        flexShrink: 0,
+      }}>
+        <div style={{ fontWeight: 700, fontSize: 14, letterSpacing: 0.3 }}>
+          <span className="live-dot" />
+          forestat
         </div>
-      )}
+        <div style={{ display: "flex", gap: 14, fontSize: 12, color: "var(--text-muted)" }}>
+          <span>
+            今日 <strong style={{ color: "var(--text)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtHours(totalToday)}</strong>
+          </span>
+          <span>
+            本周 <strong style={{ color: "var(--text)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtHours(totalWeek)}</strong>
+          </span>
+          <span>
+            本月 <strong style={{ color: "var(--text)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtHours(totalMonth)}</strong>
+          </span>
+          <span>
+            应用 <strong style={{ color: "var(--text)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{appCount}</strong>
+          </span>
+        </div>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{msg}</span>
+          <button onClick={() => setShowSettings(!showSettings)}>
+            {showSettings ? "关闭" : "设置"}
+          </button>
+        </div>
+      </header>
 
-      {tab === "settings" && cfg && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem", fontSize: 14 }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      {/* 设置面板：内联下拉 */}
+      {showSettings && cfg && (
+        <div style={{
+          padding: 10,
+          border: "1px solid var(--border)",
+          borderRadius: 4,
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          fontSize: 12,
+          flexShrink: 0,
+          background: "var(--bg-alt)",
+        }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <input type="checkbox" checked={cfg.background_mode} onChange={toggleBackground} />
-            <span>后台轻量模式(开机自启、静默运行)</span>
+            <span>后台轻量模式（开机自启、静默运行）</span>
           </label>
           <div>
-            <div style={{ marginBottom: 6, color: "var(--text-secondary)" }}>JSON 备份目录</div>
+            <div style={{ color: "var(--text-muted)", marginBottom: 4 }}>JSON 备份目录</div>
             <code style={{
-              display: "block", background: "var(--bg-secondary)", padding: 8,
-              borderRadius: 8, wordBreak: "break-all", fontSize: 13,
+              display: "block",
+              background: "var(--bg)",
+              padding: 6,
+              borderRadius: 4,
+              wordBreak: "break-all",
+              fontSize: 11,
+              border: "1px solid var(--border)",
             }}>
-              {cfg.json_dir ?? "未设置(exe 所在目录)"}
+              {cfg.json_dir ?? "未设置（exe 所在目录）"}
             </code>
-            <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+            <div style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}>
               <button onClick={pickJsonDir}>选择目录…</button>
               <button onClick={resetJsonDir} disabled={!cfg.json_dir}>恢复默认</button>
               <button onClick={writeNow}>立即写入</button>
+              <button onClick={quit} className="danger">完全退出</button>
             </div>
-          </div>
-          <div>
-            <button onClick={quit} style={{ color: "#c00" }}>完全退出</button>
           </div>
         </div>
       )}
+
+      {/* 图表区：并排，固定高度 */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: 8,
+        flexShrink: 0,
+        height: 200,
+      }}>
+        <AppUsagePie rows={rows} />
+        <WeeklyBar rows={rows} />
+      </div>
+
+      {/* 表格区：填满剩余 */}
+      <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
+        <AppTable rows={rows} />
+      </div>
     </div>
   );
-}
-
-function tabBtn(active: boolean): React.CSSProperties {
-  return {
-    padding: "6px 16px",
-    borderRadius: 8,
-    border: "1px solid var(--border)",
-    background: active ? "var(--accent)" : "var(--bg-card)",
-    color: active ? "#fff" : "var(--text-primary)",
-    cursor: active ? "default" : "pointer",
-    fontSize: "0.85rem",
-    fontWeight: 500,
-  };
 }
 
 export default App;

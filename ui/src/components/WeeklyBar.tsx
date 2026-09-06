@@ -28,15 +28,16 @@ export function WeeklyBar({ rows }: WeeklyBarProps) {
       : 0;
 
     const dayNames = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
-    const today = new Date().getDay(); // 0=Sun, 1=Mon...
+    const today = new Date().getDay();
     const todayIdx = today === 0 ? 6 : today - 1;
 
     const values = dayNames.map((_, i) =>
       i === todayIdx ? totalToday / 3600 : otherDaysAvg / 3600
     );
 
+    // 今天用实色 + 高亮顶部；其他用边框色（扁平）
     const bgColors = dayNames.map((_, i) =>
-      i === todayIdx ? "var(--accent)" : "var(--accent-light)"
+      i === todayIdx ? "var(--accent)" : "var(--border)"
     );
 
     return {
@@ -44,9 +45,13 @@ export function WeeklyBar({ rows }: WeeklyBarProps) {
       datasets: [{
         data: values,
         backgroundColor: bgColors,
-        borderRadius: 6,
+        borderColor: dayNames.map((_, i) =>
+          i === todayIdx ? "var(--accent)" : "var(--border)"
+        ),
+        borderWidth: dayNames.map((_, i) => (i === todayIdx ? 0 : 1)),
+        borderRadius: 3,
         borderSkipped: false,
-        maxBarThickness: 40,
+        maxBarThickness: 28,
       }],
     };
   }, [rows]);
@@ -66,15 +71,30 @@ export function WeeklyBar({ rows }: WeeklyBarProps) {
     scales: {
       x: {
         grid: { display: false },
-        ticks: { color: "var(--text-secondary)", font: { size: 11 } },
+        ticks: {
+          color: (ctx: { index: number }) => {
+            const today = new Date().getDay();
+            const todayIdx = today === 0 ? 6 : today - 1;
+            return ctx.index === todayIdx ? "var(--accent)" : "var(--text-muted)";
+          },
+          font: (ctx: { index: number }) => {
+            const today = new Date().getDay();
+            const todayIdx = today === 0 ? 6 : today - 1;
+            const weight: "bold" | "normal" = ctx.index === todayIdx ? "bold" : "normal";
+            return { size: 10, weight };
+          },
+        },
+        border: { color: "var(--border)" },
       },
       y: {
-        grid: { color: "var(--border)" },
+        grid: { color: "var(--border)", drawTicks: false },
         ticks: {
-          color: "var(--text-secondary)",
-          font: { size: 11 },
+          color: "var(--text-muted)",
+          font: { size: 10 },
           callback: (v: unknown) => `${v}h`,
+          padding: 4,
         },
+        border: { display: false },
         beginAtZero: true,
       },
     },
@@ -82,19 +102,15 @@ export function WeeklyBar({ rows }: WeeklyBarProps) {
 
   return (
     <div style={{
-      background: "var(--bg-card)",
-      borderRadius: "var(--radius)",
-      padding: 20,
-      boxShadow: "var(--shadow)",
+      border: "1px solid var(--border)",
+      borderRadius: 4,
+      padding: 10,
       display: "flex",
       flexDirection: "column",
+      height: "100%",
+      overflow: "hidden",
     }}>
-      <div style={{
-        fontSize: "0.8rem",
-        fontWeight: 600,
-        color: "var(--text-secondary)",
-        marginBottom: 12,
-      }}>
+      <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6, flexShrink: 0 }}>
         本周使用趋势
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
