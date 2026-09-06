@@ -18,6 +18,10 @@ pub struct StatRow {
     pub app: String,
     /// 今日秒数
     pub today_secs: u64,
+    /// 本周秒数（周一到周日，ISO 8601）
+    pub week_secs: u64,
+    /// 本月秒数（当月1日到今天）
+    pub month_secs: u64,
     /// 今年秒数
     pub year_secs: u64,
     /// 历史总计秒数
@@ -170,6 +174,11 @@ impl Tracker {
     /// stats 的可测试版本:日期由调用方注入。
     fn stats_on(&self, today: NaiveDate) -> Vec<StatRow> {
         let data = self.data.lock().unwrap();
+        // 本周起始：周一
+        let week_start = today - chrono::Duration::days(today.weekday().num_days_from_monday() as i64);
+        // 本月起始：1号
+        let month_start = today.with_day(1).unwrap();
+
         let mut rows: Vec<StatRow> = data
             .totals
             .iter()
@@ -180,6 +189,18 @@ impl Tracker {
                     .and_then(|m| m.get(app))
                     .copied()
                     .unwrap_or(0);
+                let week_secs: u64 = data
+                    .days
+                    .iter()
+                    .filter(|(d, _)| **d >= week_start && **d <= today)
+                    .filter_map(|(_, m)| m.get(app))
+                    .sum();
+                let month_secs: u64 = data
+                    .days
+                    .iter()
+                    .filter(|(d, _)| **d >= month_start && **d <= today)
+                    .filter_map(|(_, m)| m.get(app))
+                    .sum();
                 let year_secs = data
                     .days
                     .iter()
@@ -189,6 +210,8 @@ impl Tracker {
                 StatRow {
                     app: app.clone(),
                     today_secs,
+                    week_secs,
+                    month_secs,
                     year_secs,
                     total_secs: total,
                 }
@@ -265,7 +288,7 @@ mod tests {
     #[test]
     fn tick_accumulates_today_and_total() {
         let (tracker, _cfg, _dir) = test_setup();
-        let today = date(2026, 9, 6);
+        let today = date(2026, 9, 6); // 周日
         tracker.tick("vscode", today);
         tracker.tick("vscode", today);
         tracker.tick("aseprite", today);
@@ -275,6 +298,8 @@ mod tests {
         // 按总计降序
         assert_eq!(rows[0].app, "vscode");
         assert_eq!(rows[0].today_secs, 2);
+        assert_eq!(rows[0].week_secs, 2);
+        assert_eq!(rows[0].month_secs, 2);
         assert_eq!(rows[0].year_secs, 2);
         assert_eq!(rows[0].total_secs, 2);
         assert_eq!(rows[1].app, "aseprite");
